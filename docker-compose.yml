@@ -1,0 +1,36 @@
+services:
+  mysql:
+    container_name: mysql-demo-local
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=Demo@123
+      - MYSQL_DATABASE=booking
+    ports:
+      - '3306:3306'
+    image: 'mysql:8.0'
+    healthcheck:
+      test: [ "CMD-SHELL", "mysqladmin ping -h localhost" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - demo-network
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    environment:
+      SPRING_PROFILES_ACTIVE: "local"
+      SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/messages"
+      SPRING_DATASOURCE_USERNAME: "root"
+      SPRING_DATASOURCE_PASSWORD: "Demo@123"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    networks:
+      - demo-network
+networks:
+  demo-network:
+    driver: bridge
